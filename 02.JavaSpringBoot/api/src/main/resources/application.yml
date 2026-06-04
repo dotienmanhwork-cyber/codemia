@@ -2,17 +2,21 @@ spring:
   profiles:
     include: local
   datasource:
-    url: jdbc:mysql://localhost:3306/codemia?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
-    username: root
-    password: 1234
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/codemia?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:1234}
+    hikari:
+      data-source-properties:
+        sslMode: REQUIRED
+        enabledTLSProtocols: TLSv1.2,TLSv1.3
   jpa:
     open-in-view: true
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
 
 youtube:
