@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
+@import "tailwindcss";
+
+/* ── Global CSS Variables (From DashboardLayout.css & CourseDetailPage.css) ── */
+:root {
+  /* Brand */
+  --purple:       #8c06d8;
+  --purple-light: #F3DAFF;
+  --purple-dim:   #6d00ab;
+
+  /* Layout */
+  --bg:           #F7F9FA;
+  --surface:      #ffffff;
+  --border:       #E5E2E1;
+  --border-faint: #F1EDED;
+
+  /* Ink scale */
+  --ink:   #181a1c;
+  --ink-2: #44474a;
+  --ink-3: #75777a;
+
+  /* Semantic */
+  --green:      #1E7E34;
+  --green-bg:   #EAF3DE;
+  --amber:      #854F0B;
+  --amber-bg:   #FAEEDA;
+  --red:        #93000a;
+  --red-bg:     #ffdad6;
+  --blue:       #185FA5;
+  --blue-bg:    #E6F1FB;
+  --orange:     #c2410c;
+  --orange-bg:  #fff1e6;
+
+  /* Shape */
+  --radius:    10px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+
+  /* Layout dimensions */
+  --sidebar-width:  228px;
+  --topbar-height:  54px;
+
+  /* Page content padding — responsive */
+  --page-px: 26px;
+  --page-py: 24px;
+
+  /* Course Detail Specific */
+  --cd-purple: #8c06d8;
+  --cd-purple-h: #5624D0;
+  --cd-warn: #B4690E;
+  --cd-surface: #ffffff;
+  --cd-surface-f: #f7f9fa;
+  --cd-hero-bg: #f6f2f1;
+  --cd-outline: #d1d7dc;
+  --cd-on-s: #2d2f31;
+  --cd-on-sv: #6a6f73;
+  --cd-surface-lo: #ffffff;
+  --cd-surface-v: #e5e2e1;
+}
+
+@media (max-width: 1023px) {
+  :root { --page-px: 16px; --page-py: 20px; }
+}
+
+@media (max-width: 767px) {
+  :root { --page-px: 14px; --page-py: 16px; }
+}
+
+@media (max-width: 479px) {
+  :root { --page-px: 12px; --page-py: 14px; }
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #c9c6c5; }
+
+/* ── Custom Animations ── */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes tce-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ── Global Styles/Helper classes ── */
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+/* ── DataTable ── */
+table.dt {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.dt th {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  text-align: left;
+  background: #fafafa;
+  border-bottom: 0.5px solid var(--border);
+  white-space: nowrap;
+}
+
+table.dt td {
+  font-size: 13px;
+  color: var(--ink);
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border-faint);
+  vertical-align: middle;
+}
+
+table.dt tr:last-child td { border-bottom: none; }
+table.dt tr:hover td      { background: #fafafa; }
+
+@media (max-width: 479px) {
+  table.dt th { padding: 8px 10px; font-size: 10px; }
+  table.dt td { padding: 9px 10px; font-size: 12px; }
+}
+
+/* ── Course Detail Custom Utilities ── */
+.cd-ms {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-size: 20px;
+  vertical-align: middle;
+}
+.cd-ms-fill {
+  font-variation-settings: 'FILL' 1;
+  color: var(--cd-warn);
+}
+.cd-lesson-link {
+  color: var(--cd-purple) !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+}
+
+/* ── Premium Typography for TEXT Lesson Type ── */
+.codemia-prose {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--ink-2);
+}
+
+.codemia-prose p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+  font-size: 15.5px;
+}
+
+.codemia-prose h1,
+.codemia-prose h2,
+.codemia-prose h3,
+.codemia-prose h4 {
+  color: var(--ink);
+  font-weight: 700;
+  margin-top: 1.75rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.codemia-prose h1 { font-size: 24px; border-bottom: 0.5px solid var(--border); padding-bottom: 6px; }
+.codemia-prose h2 { font-size: 20px; }
+.codemia-prose h3 { font-size: 18px; }
+
+.codemia-prose ul,
+.codemia-prose ol {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.codemia-prose ul {
+  list-style-type: disc;
+}
+
+.codemia-prose ol {
+  list-style-type: decimal;
+}
+
+.codemia-prose li {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.7;
+}
+
+.codemia-prose blockquote {
+  border-left: 4px solid var(--purple);
+  background: var(--bg);
+  padding: 12px 20px;
+  margin: 1.5rem 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.codemia-prose pre {
+  background: #1e1e2e !important;
+  color: #f8f8f2 !important;
+  padding: 16px !important;
+  border-radius: var(--radius-sm) !important;
+  overflow-x: auto !important;
+  margin: 1.5rem 0 !important;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  border: 1px solid #2e2e3e !important;
+}
+
+.codemia-prose code {
+  background: var(--border-faint) !important;
+  color: var(--purple-dim) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 13.5px !important;
+  font-family: 'Fira Code', monospace !important;
+  font-weight: 600 !important;
+}
+
+.codemia-prose pre code {
+  background: transparent !important;
+  color: #cdd6f4 !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  font-weight: normal !important;
+}
+
+.codemia-prose strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.codemia-prose em {
+  font-style: italic;
+}
+
+/* Codemia Custom WYSIWYG Editor Button Hovers */
+.codemia-editor-btn:hover {
+  background: var(--border) !important;
+  color: var(--purple-dim) !important;
+}
+.codemia-editor-btn:active {
+  background: var(--purple-light) !important;
+}

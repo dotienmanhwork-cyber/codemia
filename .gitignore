@@ -1,0 +1,12 @@
+# Backend
+02.java/codemia-backend/target/
+02.java/codemia-backend/src/main/resources/application.properties
+
+# Frontend
+01.react/codemia-frontend/node_modules/
+01.react/codemia-frontend/.env
+01.react/codemia-frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db

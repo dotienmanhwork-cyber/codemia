@@ -1,0 +1,32 @@
+spring:
+  profiles:
+    include: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/codemia?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password: 1234
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+youtube:
+  api-key: ${YOUTUBE_API_KEY:}
+ai:
+  anthropic:
+    api-key: ${ANTHROPIC_API_KEY:}
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+  groq:
+    api-key: ${GROQ_API_KEY:}
+cloudinary:
+  cloud-name: daew3f0cq
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
