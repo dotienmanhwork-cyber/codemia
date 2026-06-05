@@ -12,6 +12,7 @@ export default function CourseSection({
   icon: Icon,
   showCategories = false,
   categories = [],   // ← nhận từ API thật, không dùng CATS mock nữa
+  viewAllPath,
 }) {
   const [activeCatId, setActiveCatId] = useState(null); // null = Tất cả
   const navigate = useNavigate();
@@ -37,7 +38,9 @@ export default function CourseSection({
         </div>
         <button
           onClick={() =>
-            navigate(activeCatId ? `/courses?category=${activeCatId}` : "/courses")
+            viewAllPath
+              ? navigate(viewAllPath)
+              : navigate(activeCatId ? `/courses?category=${activeCatId}` : "/courses")
           }
           className="text-[14px] font-semibold flex items-center gap-1 transition-colors"
           style={{ color: accentColor || C.secondary }}

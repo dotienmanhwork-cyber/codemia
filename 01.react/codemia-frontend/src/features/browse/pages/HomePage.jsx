@@ -50,8 +50,8 @@ export default function HomePage() {
 
   const safeCourses = Array.isArray(courses) ? courses : [];
 
-  const freeCourses     = safeCourses.filter(c => c.price === 0 || c.price === null);
-  const proCourses      = safeCourses.filter(c => c.price > 0);
+  const freeCourses     = safeCourses.filter(c => c.price === 0 || c.price === null).slice(0, 4);
+  const proCourses      = safeCourses.filter(c => c.price > 0).slice(0, 4);
   const featuredCourses = safeCourses.slice(0, 4);
 
   if (loading) {
@@ -88,6 +88,7 @@ export default function HomePage() {
             courses={freeCourses}
             accentColor={C.success}
             icon={Gift}
+            viewAllPath="/courses?price=free"
           />
         </div>
 
@@ -97,6 +98,7 @@ export default function HomePage() {
           courses={proCourses}
           accentColor="#d4a800"
           icon={Crown}
+          viewAllPath="/courses?price=pro"
         />
 
         <TestimonialsSection />

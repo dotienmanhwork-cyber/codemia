@@ -8,7 +8,9 @@ export default function CoursesPage() {
     categories,
     loading,
     activeCatId,
+    activePrice,
     handleCatChange,
+    handlePriceChange,
     filtered,
     activeCatName,
     searchQuery,
@@ -32,8 +34,12 @@ export default function CoursesPage() {
             {searchQuery.trim()
               ? `Kết quả tìm kiếm: "${searchQuery}"`
               : activeCatName
-                ? `Khóa học: ${activeCatName}`
-                : "Tất cả khóa học"}
+                ? `Khóa học ${activePrice === "free" ? "Miễn phí" : activePrice === "pro" ? "Pro" : ""}: ${activeCatName}`
+                : activePrice === "free"
+                  ? "Khóa học Miễn phí"
+                  : activePrice === "pro"
+                    ? "Khóa học Pro"
+                    : "Tất cả khóa học"}
           </h1>
           <p className="text-[15px]" style={{ color: C.onVariant }}>
             {filtered.length} khóa học
@@ -49,12 +55,41 @@ export default function CoursesPage() {
       {/* ── Content ── */}
       <div className="px-10 py-8" style={{ maxWidth: 1280, margin: "0 auto" }}>
 
+        {/* Price filter pills */}
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
+          <span className="text-[13px] font-bold uppercase tracking-wider text-gray-500 mr-2">Học phí:</span>
+          {[
+            { id: null, label: "Tất cả" },
+            { id: "free", label: "Miễn phí" },
+            { id: "pro", label: "Pro" }
+          ].map((item) => {
+            const isActive = activePrice === item.id;
+            return (
+              <button
+                key={item.id ?? "all"}
+                onClick={() => handlePriceChange(item.id)}
+                className="px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors cursor-pointer"
+                style={
+                  isActive
+                    ? { backgroundColor: C.secondary, color: "white", borderColor: C.secondary }
+                    : { backgroundColor: C.surfaceCont, color: C.onVariant, borderColor: C.outline }
+                }
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = C.surfaceHigh; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = C.surfaceCont; }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Category filter pills */}
         {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-2 mb-8 items-center">
+            <span className="text-[13px] font-bold uppercase tracking-wider text-gray-500 mr-2">Chủ đề:</span>
             <button
               onClick={() => handleCatChange(null)}
-              className="px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors"
+              className="px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors cursor-pointer"
               style={
                 !activeCatId
                   ? { backgroundColor: C.secondary, color: "white", borderColor: C.secondary }
@@ -70,7 +105,7 @@ export default function CoursesPage() {
               <button
                 key={cat.id}
                 onClick={() => handleCatChange(cat.id)}
-                className="px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors"
+                className="px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors cursor-pointer"
                 style={
                   activeCatId === cat.id
                     ? { backgroundColor: C.secondary, color: "white", borderColor: C.secondary }

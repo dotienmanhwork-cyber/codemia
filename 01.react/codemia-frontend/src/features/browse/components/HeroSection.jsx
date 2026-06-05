@@ -1,10 +1,12 @@
 
 import { PlayCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import GradText from "@/shared/components/dashboard-ui/GradText";
 import { C } from "@/shared/utils/constants";
 import heroImage from "../assets/Hero-Image.jpg";
 
 export default function HeroSection() {
+  const navigate = useNavigate();
   return (
     <section className="relative w-full overflow-hidden bg-[#181a1c] min-h-[500px] flex items-center">
       {/* Background Image */}
@@ -43,6 +45,7 @@ export default function HeroSection() {
 
           <div className="flex gap-4 mt-2">
             <button
+              onClick={() => navigate("/courses")}
               className="px-7 py-3 text-[14px] font-semibold text-white rounded transition-colors shadow-sm cursor-pointer"
               style={{ backgroundColor: C.secondary }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = C.accentHover)}
