@@ -8,14 +8,14 @@ import { catalogApi } from "@/features/browse/api/catalog.api";
 const LOGO_URL = "/assets/logo-codemia.png";
 
 const C = {
-  secondary:    "#8c06d8",
-  accentHover:  "#5624D0",
-  surfaceLow:   "#f6f3f2",
-  surfaceCont:  "#f1eded",
-  surfaceHigh:  "#ebe7e7",
-  outline:      "#c5c6ca",
-  onVariant:    "#44474a",
-  surface:      "#fcf8f8",
+  secondary: "#8c06d8",
+  accentHover: "#5624D0",
+  surfaceLow: "#f6f3f2",
+  surfaceCont: "#f1eded",
+  surfaceHigh: "#ebe7e7",
+  outline: "#c5c6ca",
+  onVariant: "#44474a",
+  surface: "#fcf8f8",
 };
 
 // "Courses" đổi thành "Khám phá" — phân biệt với "My Course" (khóa học đã mua)
@@ -25,8 +25,8 @@ const NAV_LINKS = ["Trang chủ", "Khám phá", "Giảng viên"];
 function getDisplayName(user) {
   if (!user) return "";
   if (user.fullName) return user.fullName.trim().split(" ").slice(-1)[0];
-  if (user.name)     return user.name.trim().split(" ").slice(-1)[0];
-  if (user.email)    return user.email.split("@")[0];
+  if (user.name) return user.name.trim().split(" ").slice(-1)[0];
+  if (user.email) return user.email.split("@")[0];
   return "bạn";
 }
 
@@ -55,7 +55,7 @@ function Avatar({ user }) {
 // ─── Category Mega Dropdown ─────────────────────────────────────
 function CategoryDropdown({ onClose, navigate, onMouseEnter, onMouseLeave }) {
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     catalogApi.getAllCategories()
@@ -203,18 +203,18 @@ function CategoryDropdown({ onClose, navigate, onMouseEnter, onMouseLeave }) {
 
 // ─── Main Navbar ───────────────────────────────────────────────
 export default function Navbar() {
-  const [active, setActive]             = useState("Trang chủ");
+  const [active, setActive] = useState("Trang chủ");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [myCoursesOpen, setMyCoursesOpen] = useState(false);
-  const [myCourses, setMyCourses]       = useState([]);
+  const [myCourses, setMyCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [searchText, setSearchText]     = useState("");
+  const [searchText, setSearchText] = useState("");
 
-  const dropdownRef   = useRef(null);
-  const myCoursesRef  = useRef(null);
-  const categoryRef   = useRef(null);
-  const hoverTimer    = useRef(null);
+  const dropdownRef = useRef(null);
+  const myCoursesRef = useRef(null);
+  const categoryRef = useRef(null);
+  const hoverTimer = useRef(null);
 
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -247,7 +247,7 @@ export default function Navbar() {
       try {
         const res = await getMyCourses();
         setMyCourses(res.result || []);
-      } catch(err) {
+      } catch (err) {
         console.error("getMyCourses error:", err);
         setMyCourses([]);
       } finally {
@@ -267,7 +267,7 @@ export default function Navbar() {
   const handleNavClick = (link) => {
     setActive(link);
     if (link === "Trang chủ") navigate("/");
-    if (link === "Giảng viên") navigate("/instructors");
+    if (link === "Giảng viên") navigate("/giang-vien");
   };
 
   return (

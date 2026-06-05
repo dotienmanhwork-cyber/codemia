@@ -26,7 +26,7 @@ const stats = [
   { value: "50K+", label: "Học viên" },
   { value: "200+", label: "Khoá học" },
   { value: "4.8★", label: "Đánh giá TB" },
-  { value: "98%",  label: "Hài lòng" },
+  { value: "98%", label: "Hài lòng" },
 ];
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ const IconX = ({ size = 14, color = "#aaa" }) => (
 
 // ── CV Drag & Drop Zone ───────────────────────────────────────────────────────
 function CvUploadZone({ cvFile, onFileSelect, onFileRemove, uploading, uploadError }) {
-  const inputRef   = useRef(null);
+  const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   function handleDrop(e) {
@@ -95,24 +95,24 @@ function CvUploadZone({ cvFile, onFileSelect, onFileRemove, uploading, uploadErr
   }
 
   // Xác định trạng thái zone
-  const isError   = !!uploadError;
-  const hasFile   = !!cvFile && !isError;
+  const isError = !!uploadError;
+  const hasFile = !!cvFile && !isError;
 
   const zoneBorder = isError
     ? "1.5px dashed #e74c3c"
     : dragging
-    ? `2px dashed ${PURPLE}`
-    : hasFile
-    ? `1.5px solid ${PURPLE}`
-    : "1.5px dashed #ddd";
+      ? `2px dashed ${PURPLE}`
+      : hasFile
+        ? `1.5px solid ${PURPLE}`
+        : "1.5px dashed #ddd";
 
   const zoneBg = isError
     ? "#fdf0f0"
     : dragging
-    ? PURPLE_LIGHT
-    : hasFile
-    ? "#f9f2fe"
-    : "#fafafa";
+      ? PURPLE_LIGHT
+      : hasFile
+        ? "#f9f2fe"
+        : "#fafafa";
 
   return (
     <div style={{ marginBottom: 20 }}>
@@ -254,17 +254,17 @@ function ApplyForm({ onSuccess }) {
   const { user, isAuthenticated } = useAuth();
   const { uploading, uploadPdf, error: uploadError, clearError } = useCloudinaryPdfUpload();
 
-  const [reason,  setReason]  = useState("");
-  const [cvFile,  setCvFile]  = useState(null);   // File object người dùng chọn
-  const [cvUrl,        setCvUrl]        = useState("");  // URL sau khi upload xong
+  const [reason, setReason] = useState("");
+  const [cvFile, setCvFile] = useState(null);   // File object người dùng chọn
+  const [cvUrl, setCvUrl] = useState("");  // URL sau khi upload xong
   const [portfolioUrl, setPortfolioUrl] = useState("");  // Link GitHub hoặc portfolio
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState("");
+  const [error, setError] = useState("");
 
   const minLen = 20;
   const maxLen = 1000;
-  const len    = reason.trim().length;
-  const valid  = len >= minLen && len <= maxLen;
+  const len = reason.trim().length;
+  const valid = len >= minLen && len <= maxLen;
 
   // Khi user chọn / kéo thả file → validate + upload ngay
   async function handleFileSelect(file) {
@@ -334,7 +334,7 @@ function ApplyForm({ onSuccess }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 6 }}>
         {[
           { label: "Họ tên", value: user?.fullName || "" },
-          { label: "Email",  value: user?.email    || "" },
+          { label: "Email", value: user?.email || "" },
         ].map(({ label, value }) => (
           <div key={label}>
             <label style={{ fontSize: 12, color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -482,7 +482,7 @@ function SuccessScreen({ onBack }) {
 
 export default function TeachOnCodemia() {
   const [submitted, setSubmitted] = useState(false);
-  const [visible, setVisible]     = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
@@ -623,7 +623,7 @@ export default function TeachOnCodemia() {
               transition: "transform 0.2s, box-shadow 0.2s",
             }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 8px 32px ${PURPLE}18`; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)";    e.currentTarget.style.boxShadow = "0 2px 16px #0000060a"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 16px #0000060a"; }}
             >
               <div style={{ fontSize: 32, marginBottom: 10 }}>{icon}</div>
               <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{title}</div>

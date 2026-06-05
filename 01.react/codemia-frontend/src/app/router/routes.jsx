@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 
 import PublicLayout from "../../layouts/PublicLayout";
 import HomePage from "../../features/browse/pages/HomePage";
@@ -9,6 +9,7 @@ import ExercisePage from "../../features/learning/pages/ExercisePage";
 import CertificatePage from "../../features/learning/pages/CertificatePage";
 import TeachOnCodemia from "../../features/browse/pages/TeachOnCodemia";
 import CoursesPage    from "../../features/browse/pages/CoursesPage";
+import InstructorsPage from "../../features/browse/pages/InstructorsPage";
 import ProfilePage    from "../../features/auth/pages/ProfilePage";
 import CartPage           from "../../features/checkout/pages/CartPage";
 import PaymentResultPage  from "../../features/checkout/pages/PaymentResultPage";
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: "/register",     element: <LoginPage />        },
       { path: "/teach",        element: <TeachOnCodemia />   },
       { path: "/courses",      element: <CoursesPage />      },
+      { path: "/giang-vien",   element: <InstructorsPage />  },
       { path: "/profile",          element: <ProfilePage />         },
       { path: "/cart",             element: <CartPage />            },
       { path: "/payment/result",   element: <PaymentResultPage />   },
