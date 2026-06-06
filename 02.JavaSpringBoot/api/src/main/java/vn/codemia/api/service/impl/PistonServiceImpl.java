@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,7 +20,12 @@ import java.util.Map;
 @Service
 public class PistonServiceImpl implements PistonService {
 
-    private static final String PISTON_URL = "http://localhost:2000/api/v2/execute";
+    @Value("${piston.url:http://localhost:2000}")
+    private String pistonBaseUrl;
+
+    private String getPistonUrl() {
+        return pistonBaseUrl + "/api/v2/execute";
+    }
 
     private static final Map<String, String> LANGUAGE_MAP = Map.of(
             "java",       "java",
@@ -172,7 +178,7 @@ public class PistonServiceImpl implements PistonService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    PISTON_URL, HttpMethod.POST, entity, String.class);
+                    getPistonUrl(), HttpMethod.POST, entity, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
 

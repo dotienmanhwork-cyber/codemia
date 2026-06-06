@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    include: local
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/codemia?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8}
     username: ${DATABASE_USERNAME:root}
@@ -34,3 +32,5 @@ cloudinary:
   cloud-name: daew3f0cq
   api-key: ${CLOUDINARY_API_KEY:}
   api-secret: ${CLOUDINARY_API_SECRET:}
+piston:
+  url: ${PISTON_URL:http://localhost:2000}
