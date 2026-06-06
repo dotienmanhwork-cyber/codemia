@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    include: local
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/codemia?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8}
     username: ${DATABASE_USERNAME:root}

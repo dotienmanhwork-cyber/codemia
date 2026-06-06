@@ -1,5 +1,7 @@
 package vn.codemia.api.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import vn.codemia.api.dto.request.AiFeatureConfigUpdateRequest;
 import vn.codemia.api.dto.response.AiCacheSummaryResponse;
 import vn.codemia.api.dto.response.AiFeatureConfigResponse;
@@ -26,7 +28,7 @@ public interface AiAdminService {
 
 	// ── Summary cache ─────────────────────────────────────────────────────
 	/** Lấy toàn bộ lessons kèm thông tin cache (có thể filter theo courseId). */
-	List<AiCacheSummaryResponse> getCacheSummary(String courseId);
+	Page<AiCacheSummaryResponse> getCacheSummary(String courseId, Pageable pageable);
 
 	/** Xóa cache của 1 lesson. */
 	void clearLessonCache(Integer lessonId);

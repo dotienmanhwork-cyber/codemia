@@ -1,5 +1,7 @@
 package vn.codemia.api.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,6 +41,18 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 	// ── AI Admin: cache summary ──────────────────────────────────────────
 
 	/** Lấy toàn bộ lessons của 1 course kèm section + course (tránh N+1). */
+	@Query(value = """
+		SELECT l FROM Lesson l
+		JOIN FETCH l.section s
+		JOIN FETCH s.course c
+		WHERE c.id = :courseId
+		ORDER BY s.orderIndex, l.orderIndex
+	""", countQuery = """
+		SELECT COUNT(l) FROM Lesson l
+		WHERE l.section.course.id = :courseId
+	""")
+	Page<Lesson> findAllByCourseId(@Param("courseId") String courseId, Pageable pageable);
+
 	@Query("""
 		SELECT l FROM Lesson l
 		JOIN FETCH l.section s
@@ -49,11 +63,13 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 	List<Lesson> findAllByCourseId(@Param("courseId") String courseId);
 
 	/** Lấy toàn bộ lessons (tất cả courses) kèm section + course (tránh N+1). */
-	@Query("""
+	@Query(value = """
 		SELECT l FROM Lesson l
 		JOIN FETCH l.section s
 		JOIN FETCH s.course c
 		ORDER BY c.title, s.orderIndex, l.orderIndex
+	""", countQuery = """
+		SELECT COUNT(l) FROM Lesson l
 	""")
-	List<Lesson> findAllWithCourseInfo();
+	Page<Lesson> findAllWithCourseInfo(Pageable pageable);
 }

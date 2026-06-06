@@ -1,5 +1,8 @@
 package vn.codemia.api.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +11,7 @@ import vn.codemia.api.dto.request.AiFeatureConfigUpdateRequest;
 import vn.codemia.api.dto.response.AiCacheSummaryResponse;
 import vn.codemia.api.dto.response.AiFeatureConfigResponse;
 import vn.codemia.api.dto.response.AiProviderStatusResponse;
+import vn.codemia.api.dto.response.ApiResponse;
 import vn.codemia.api.enums.AiFeature;
 import vn.codemia.api.service.AiAdminService;
 
@@ -69,15 +73,22 @@ public class AiAdminController {
 	// ── Summary cache ─────────────────────────────────────────────────────
 
 	/**
-	 * GET /api/admin/ai/cache/summary?courseId=xxx
+	 * GET /api/admin/ai/cache/summary?courseId=xxx&page=1&size=10
 	 * Danh sách lessons kèm thông tin cache.
 	 * courseId optional — nếu không có thì trả tất cả.
 	 */
 	@GetMapping("/cache/summary")
-	public ResponseEntity<List<AiCacheSummaryResponse>> getCacheSummary(
-			@RequestParam(required = false) String courseId) {
+	public ResponseEntity<ApiResponse<Page<AiCacheSummaryResponse>>> getCacheSummary(
+			@RequestParam(required = false) String courseId,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size) {
 
-		return ResponseEntity.ok(aiAdminService.getCacheSummary(courseId));
+		Pageable pageable = PageRequest.of(page - 1, size);
+		Page<AiCacheSummaryResponse> result = aiAdminService.getCacheSummary(courseId, pageable);
+		return ResponseEntity.ok(ApiResponse.<Page<AiCacheSummaryResponse>>builder()
+				.code(1000)
+				.result(result)
+				.build());
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package vn.codemia.api.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -249,31 +251,29 @@ public class AiAdminServiceImpl implements AiAdminService {
 	// ── Summary cache ─────────────────────────────────────────────────────
 
 	@Override
-	public List<AiCacheSummaryResponse> getCacheSummary(String courseId) {
-		List<Lesson> lessons = (courseId != null && !courseId.isBlank())
-				? lessonRepository.findAllByCourseId(courseId)
-				: lessonRepository.findAllWithCourseInfo();
+	public Page<AiCacheSummaryResponse> getCacheSummary(String courseId, Pageable pageable) {
+		Page<Lesson> lessons = (courseId != null && !courseId.isBlank())
+				? lessonRepository.findAllByCourseId(courseId, pageable)
+				: lessonRepository.findAllWithCourseInfo(pageable);
 
-		return lessons.stream()
-				.map(lesson -> {
-					String cId    = lesson.getSection().getCourse().getId();
-					String cTitle = lesson.getSection().getCourse().getTitle();
-					int transcriptLen = lesson.getTranscript() != null
-							? lesson.getTranscript().length() : 0;
+		return lessons.map(lesson -> {
+			String cId    = lesson.getSection().getCourse().getId();
+			String cTitle = lesson.getSection().getCourse().getTitle();
+			int transcriptLen = lesson.getTranscript() != null
+					? lesson.getTranscript().length() : 0;
 
-					return AiCacheSummaryResponse.builder()
-							.lessonId(lesson.getId())
-							.lessonTitle(lesson.getTitle())
-							.courseId(cId)
-							.courseTitle(cTitle)
-							.hasSummaryCache(lesson.getAiSummaryCache() != null
-									&& !lesson.getAiSummaryCache().isBlank())
-							.hasTranscript(lesson.getTranscript() != null
-									&& !lesson.getTranscript().isBlank())
-							.transcriptLength(transcriptLen > 0 ? transcriptLen : null)
-							.build();
-				})
-				.toList();
+			return AiCacheSummaryResponse.builder()
+					.lessonId(lesson.getId())
+					.lessonTitle(lesson.getTitle())
+					.courseId(cId)
+					.courseTitle(cTitle)
+					.hasSummaryCache(lesson.getAiSummaryCache() != null
+							&& !lesson.getAiSummaryCache().isBlank())
+					.hasTranscript(lesson.getTranscript() != null
+							&& !lesson.getTranscript().isBlank())
+					.transcriptLength(transcriptLen > 0 ? transcriptLen : null)
+					.build();
+		});
 	}
 
 	@Override

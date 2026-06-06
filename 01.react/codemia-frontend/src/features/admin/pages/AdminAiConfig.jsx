@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import PageHeader from '../../../shared/components/dashboard-ui/PageHeader';
 import StatusBadge from '../../../shared/components/dashboard-ui/StatusBadge';
 import DataTable from '../../../shared/components/dashboard-ui/DataTable';
+import Pagination from '../../../shared/components/dashboard-ui/Pagination';
 import {
   getAiProviders,
   getAiConfig,
@@ -208,6 +209,9 @@ export default function AdminAiConfig() {
   const [configs, setConfigs]       = useState([]);
   const [cache, setCache]           = useState([]);
   const [courseIdFilter, setCourseIdFilter] = useState('');
+  const [activeCourseId, setActiveCourseId] = useState('');
+  const [page, setPage]             = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [localConfigs, setLocalConfigs] = useState({});   // { [feature]: { providerOrder, enabled } }
   const [saving, setSaving]         = useState({});        // { [feature]: bool }
@@ -247,15 +251,32 @@ export default function AdminAiConfig() {
       .finally(() => setLoadingConfig(false));
   }, []);
 
-  const loadCache = useCallback((cid) => {
+  const loadCache = useCallback((cid, p = 1) => {
     setLoadingCache(true);
-    getAiCacheSummary(cid || undefined)
-      .then((res) => setCache(res?.result ?? res ?? []))
-      .catch(() => setCache([]))
+    getAiCacheSummary(cid || undefined, p, 10)
+      .then((res) => {
+        const result = res?.result ?? res;
+        if (result && Array.isArray(result.content)) {
+          setCache(result.content);
+          setTotalPages(result.totalPages ?? 1);
+        } else if (Array.isArray(result)) {
+          setCache(result);
+          setTotalPages(1);
+        } else {
+          setCache([]);
+          setTotalPages(1);
+        }
+      })
+      .catch(() => {
+        setCache([]);
+        setTotalPages(1);
+      })
       .finally(() => setLoadingCache(false));
   }, []);
 
-  useEffect(() => { loadCache(''); }, [loadCache]);
+  useEffect(() => {
+    loadCache(activeCourseId, page);
+  }, [activeCourseId, page, loadCache]);
 
   /* ── handlers ── */
   function showToast(msg, ok = true) {
@@ -319,7 +340,7 @@ export default function AdminAiConfig() {
         await deleteAiCacheByCourse(confirm.id);
       }
       showToast('Đã xóa cache thành công.');
-      loadCache(courseIdFilter);
+      loadCache(activeCourseId, page);
     } catch {
       showToast('Xóa cache thất bại.', false);
     } finally {
@@ -517,7 +538,10 @@ export default function AdminAiConfig() {
               icon="ti-search"
               label="Lọc"
               variant="ghost"
-              onClick={() => loadCache(courseIdFilter)}
+              onClick={() => {
+                setActiveCourseId(courseIdFilter);
+                setPage(1);
+              }}
               small
             />
           </div>
@@ -526,68 +550,71 @@ export default function AdminAiConfig() {
         {loadingCache ? (
           <Skeleton rows={4} />
         ) : (
-          <DataTable
-            columns={[
-              { key: 'lessonId',    label: 'ID bài học',   width: 90  },
-              { key: 'lessonTitle', label: 'Bài học',       width: '40%' },
-              { key: 'courseTitle', label: 'Khóa học'               },
-              { key: 'cachedAt',   label: 'Thời gian cache',    width: 130 },
-              { key: 'actions',    label: '',             width: 90  },
-            ]}
-            data={cache}
-            emptyText="Không tìm thấy bộ nhớ đệm tóm tắt nào."
-            renderCell={(key, val, row) => {
-              if (key === 'cachedAt') {
-                return (
-                  <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
-                    {val ? new Date(val).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
-                  </span>
-                );
-              }
-              if (key === 'actions') {
-                return (
-                  <div style={{ display: 'flex', gap: 5 }}>
-                    <button
-                      title="Xóa cache bài học"
-                      onClick={() => askDelete('lesson', row.lessonId, row.lessonTitle ?? `Lesson ${row.lessonId}`)}
-                      style={{
-                        ...iconActionBtn,
-                        color: 'var(--red)',
-                        background: 'var(--red-bg)',
-                        border: '0.5px solid transparent',
-                      }}
-                    >
-                      <i className="ti ti-trash" style={{ fontSize: 12 }} />
-                    </button>
-                    {row.courseId && (
+          <>
+            <DataTable
+              columns={[
+                { key: 'lessonId',    label: 'ID bài học',   width: 90  },
+                { key: 'lessonTitle', label: 'Bài học',       width: '40%' },
+                { key: 'courseTitle', label: 'Khóa học'               },
+                { key: 'cachedAt',   label: 'Thời gian cache',    width: 130 },
+                { key: 'actions',    label: '',             width: 90  },
+              ]}
+              data={cache}
+              emptyText="Không tìm thấy bộ nhớ đệm tóm tắt nào."
+              renderCell={(key, val, row) => {
+                if (key === 'cachedAt') {
+                  return (
+                    <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
+                      {val ? new Date(val).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                    </span>
+                  );
+                }
+                if (key === 'actions') {
+                  return (
+                    <div style={{ display: 'flex', gap: 5 }}>
                       <button
-                        title="Xóa tất cả cache cho khóa học này"
-                        onClick={() => askDelete('course', row.courseId, row.courseTitle ?? `Course ${row.courseId}`)}
+                        title="Xóa cache bài học"
+                        onClick={() => askDelete('lesson', row.lessonId, row.lessonTitle ?? `Lesson ${row.lessonId}`)}
                         style={{
                           ...iconActionBtn,
-                          color: 'var(--amber)',
-                          background: 'var(--amber-bg)',
+                          color: 'var(--red)',
+                          background: 'var(--red-bg)',
                           border: '0.5px solid transparent',
                         }}
                       >
-                        <i className="ti ti-trash-x" style={{ fontSize: 12 }} />
+                        <i className="ti ti-trash" style={{ fontSize: 12 }} />
                       </button>
-                    )}
-                  </div>
+                      {row.courseId && (
+                        <button
+                          title="Xóa tất cả cache cho khóa học này"
+                          onClick={() => askDelete('course', row.courseId, row.courseTitle ?? `Course ${row.courseId}`)}
+                          style={{
+                            ...iconActionBtn,
+                            color: 'var(--amber)',
+                            background: 'var(--amber-bg)',
+                            border: '0.5px solid transparent',
+                          }}
+                        >
+                          <i className="ti ti-trash-x" style={{ fontSize: 12 }} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <span style={{
+                    fontSize: 13, color: 'var(--ink)',
+                    display: 'block',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    maxWidth: key === 'lessonTitle' ? 240 : undefined,
+                  }}>
+                    {val ?? '—'}
+                  </span>
                 );
-              }
-              return (
-                <span style={{
-                  fontSize: 13, color: 'var(--ink)',
-                  display: 'block',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  maxWidth: key === 'lessonTitle' ? 240 : undefined,
-                }}>
-                  {val ?? '—'}
-                </span>
-              );
-            }}
-          />
+              }}
+            />
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          </>
         )}
       </Section>
     </div>

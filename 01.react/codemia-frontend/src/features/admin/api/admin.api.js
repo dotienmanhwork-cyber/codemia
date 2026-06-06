@@ -203,9 +203,13 @@ export const resetAiConfig = () =>
  * GET /admin/ai/cache/summary?courseId={courseId}
  * @param {string|number} [courseId] — optional filter
  */
-export const getAiCacheSummary = (courseId) =>
+export const getAiCacheSummary = (courseId, page = 1, size = 10) =>
   apiClient.get('/admin/ai/cache/summary', {
-    params: courseId ? { courseId } : {},
+    params: {
+      ...(courseId ? { courseId } : {}),
+      page,
+      size,
+    },
   })
 
 /**
