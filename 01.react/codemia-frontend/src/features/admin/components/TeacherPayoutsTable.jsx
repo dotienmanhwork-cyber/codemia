@@ -100,7 +100,7 @@ export default function TeacherPayoutsTable({ data = [], loading, activeMonth, o
               <th>Khóa học</th>
               <th>Học viên</th>
               <th>Doanh thu</th>
-              <th>Chi trả (75%)</th>
+              <th>Chi trả (80%)</th>
               <th>Trạng thái</th>
             </tr>
           </thead>

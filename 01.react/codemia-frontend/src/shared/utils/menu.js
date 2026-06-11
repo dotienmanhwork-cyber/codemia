@@ -29,7 +29,6 @@ export const adminMenu = [
   { id: 'categories',label: 'Danh mục', icon: 'folder',        path: '/admin/categories'  },
   { id: 'finance',   label: 'Tài chính',    icon: 'credit-card',   path: '/admin/finance'     },
   { id: 'ai-config', label: 'Cấu hình AI',  icon: 'cpu',              path: '/admin/ai-config' },
-  { id: 'settings',  label: 'Cài đặt',  icon: 'settings',         path: '/admin/settings' },
   { isDivider: true },
   { id: 'back', label: 'Quay lại giao diện học viên', icon: 'arrow-left', path: '/', isBack: true },
 ]

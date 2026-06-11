@@ -32,11 +32,11 @@ const fmtDate = (s) => s ? new Date(s).toLocaleDateString('vi-VN') : '—'
 
 // Số cột thay đổi theo tab — dùng để skeleton đúng cols
 const COLS_BY_STATUS = {
-  ALL               : 6,
-  WAITING_BANK_INFO : 5,
-  PENDING           : 6,
-  COMPLETED         : 7,
-  CANCELLED         : 7,
+  ALL               : 8,
+  WAITING_BANK_INFO : 6,
+  PENDING           : 7,
+  COMPLETED         : 8,
+  CANCELLED         : 8,
 }
 
 function SkeletonRows({ cols = 6, rows = 10 }) {
@@ -96,6 +96,7 @@ export default function AdminRefundTable({
   const headers = (() => {
     if (activeStatus === 'WAITING_BANK_INFO') return ['Học viên', 'Khoá học', 'Số tiền', 'Lý do', 'Ngày tạo', '']
     if (activeStatus === 'PENDING')           return ['Học viên', 'Khoá học', 'Số tiền', 'Thông tin ngân hàng', 'Lý do', 'Ngày tạo', '']
+    if (activeStatus === 'ALL')               return ['Học viên', 'Khoá học', 'Số tiền', 'Thông tin ngân hàng', 'Lý do', 'Trạng thái', 'Ngày tạo', 'Thao tác']
     return ['Học viên', 'Khoá học', 'Số tiền', 'Thông tin ngân hàng', 'Lý do', 'Xử lý bởi', 'Ngày xử lý', 'Ghi chú']
   })()
 
@@ -321,8 +322,18 @@ export default function AdminRefundTable({
                     </span>
                   </td>
 
-                  {/* Ngày tạo — WAITING_BANK_INFO + PENDING */}
-                  {(activeStatus === 'WAITING_BANK_INFO' || activeStatus === 'PENDING') && (
+                   {/* Trạng thái — chỉ hiện ở ALL */}
+                  {activeStatus === 'ALL' && (
+                    <td style={tdStyle}>
+                      <StatusBadge
+                        label={TAB_LABEL[r.status] ?? r.status}
+                        variant={STATUS_VARIANT[r.status] ?? 'neutral'}
+                      />
+                    </td>
+                  )}
+
+                  {/* Ngày tạo — WAITING_BANK_INFO + PENDING + ALL */}
+                  {(activeStatus === 'WAITING_BANK_INFO' || activeStatus === 'PENDING' || activeStatus === 'ALL') && (
                     <td style={{ ...tdStyle, color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
                       {fmtDate(r.createdAt)}
                     </td>
@@ -332,7 +343,7 @@ export default function AdminRefundTable({
                   {(activeStatus === 'COMPLETED' || activeStatus === 'CANCELLED') && (
                     <>
                       <td style={{ ...tdStyle, color: 'var(--ink-3)', fontSize: 12 }}>
-                        {r.resolvedByAdminName || '—'}
+                        {r.resolvedByAdminName || r.resolvedBy || '—'}
                       </td>
                       <td style={{ ...tdStyle, color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
                         {fmtDate(r.resolvedAt)}
@@ -343,11 +354,11 @@ export default function AdminRefundTable({
                     </>
                   )}
 
-                  {/* Actions */}
-                  {(activeStatus === 'WAITING_BANK_INFO' || activeStatus === 'PENDING') && (
+                  {/* Actions — WAITING_BANK_INFO + PENDING + ALL */}
+                  {(activeStatus === 'WAITING_BANK_INFO' || activeStatus === 'PENDING' || activeStatus === 'ALL') && (
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        {activeStatus === 'PENDING' && (
+                        {r.status === 'PENDING' && (
                           <button
                             onClick={() => { setCompleteTarget(r); setCompleteNote('') }}
                             style={btnStyle('var(--green-bg)', 'var(--green)')}
@@ -356,7 +367,7 @@ export default function AdminRefundTable({
                             Đã hoàn tiền
                           </button>
                         )}
-                        {activeStatus === 'WAITING_BANK_INFO' && (
+                        {r.status === 'WAITING_BANK_INFO' && (
                           <button
                             onClick={() => onRemind(r.id)}
                             disabled={reminding}
@@ -366,13 +377,18 @@ export default function AdminRefundTable({
                             Nhắc lại
                           </button>
                         )}
-                        <button
-                          onClick={() => setCancelTarget(r)}
-                          style={btnStyle('var(--red-bg)', 'var(--red)')}
-                        >
-                          <i className="ti ti-x" style={{ fontSize: 12 }} />
-                          Hủy
-                        </button>
+                        {(r.status === 'PENDING' || r.status === 'WAITING_BANK_INFO') && (
+                          <button
+                            onClick={() => setCancelTarget(r)}
+                            style={btnStyle('var(--red-bg)', 'var(--red)')}
+                          >
+                            <i className="ti ti-x" style={{ fontSize: 12 }} />
+                            Hủy
+                          </button>
+                        )}
+                        {r.status !== 'PENDING' && r.status !== 'WAITING_BANK_INFO' && (
+                          <span style={{ color: 'var(--ink-3)', fontStyle: 'italic', fontSize: 12 }}>—</span>
+                        )}
                       </div>
                     </td>
                   )}

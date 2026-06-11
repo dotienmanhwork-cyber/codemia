@@ -59,6 +59,16 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Integer>
     """)
 	double sumFrozenByTeacherId(@Param("teacherId") String teacherId);
 
+	// Tổng tiền theo teacher + 1 status bất kỳ — dùng trong logic clawback
+	@Query("""
+        SELECT COALESCE(SUM(w.amount), 0)
+        FROM Withdrawal w
+        WHERE w.teacher.id = :teacherId
+        AND w.status = :status
+    """)
+	double sumByTeacherIdAndStatus(@Param("teacherId") String teacherId,
+	                               @Param("status") WithdrawalStatus status);
+
 	// Kiểm tra teacher có request PENDING không — tránh spam request
 	boolean existsByTeacherIdAndStatus(String teacherId, WithdrawalStatus status);
 

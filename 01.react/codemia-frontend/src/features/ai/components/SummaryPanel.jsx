@@ -79,7 +79,13 @@ export default function SummaryPanel({
   const summaryItems = propItems ?? fetchedItems;
   const isLoading    = propLoading ?? fetchLoading;
 
-  const [expanded, setExpanded] = useState(true);
+  const [prevLessonId, setPrevLessonId] = useState(lessonId);
+  const [expanded, setExpanded] = useState(false);
+
+  if (lessonId !== prevLessonId) {
+    setPrevLessonId(lessonId);
+    setExpanded(false);
+  }
 
   if (isLoading) {
     return (

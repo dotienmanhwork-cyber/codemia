@@ -165,7 +165,10 @@ public class RefundServiceImpl implements RefundService {
 		if (bankJson == null) return; // Vẫn chưa có — không làm gì
 
 		BankSnapshot snap = parseBankSnapshot(bankJson);
-		if (snap.bankAccountNumber == null && snap.bankName == null) return;
+		if (snap.bankAccountNumber == null || snap.bankAccountNumber.isBlank()
+				|| snap.bankName == null || snap.bankName.isBlank()) {
+			return;
+		}
 
 		for (RefundRequest refund : waiting) {
 			refund.setStatus(RefundStatus.PENDING);
@@ -275,12 +278,9 @@ public class RefundServiceImpl implements RefundService {
 
 		notificationService.notifyUser(
 				refund.getStudent(),
-				"Nhắc nhở: Cập nhật thông tin ngân hàng để nhận hoàn tiền",
+				"Chưa nhập thông tin ngân hàng",
 				String.format(
-						"Bạn có khoản hoàn tiền %.0f₫ cho khóa học \"%s\" đang chờ. " +
-								"Vui lòng vào Profile → Thông tin ngân hàng để cập nhật " +
-								"và nhận tiền hoàn sớm nhất.",
-						refund.getAmount().doubleValue(),
+						"Chưa nhập thông tin ngân hàng, vui lòng nhập để được hoàn tiền cho khóa học \"%s\"",
 						refund.getCourseTitle()
 				)
 		);
@@ -299,7 +299,8 @@ public class RefundServiceImpl implements RefundService {
 				? student.getProfile().getBankAccountInfo() : null;
 
 		BankSnapshot snap = bankJson != null ? parseBankSnapshot(bankJson) : new BankSnapshot();
-		boolean hasBankInfo = snap.bankAccountNumber != null || snap.bankName != null;
+		boolean hasBankInfo = snap.bankAccountNumber != null && !snap.bankAccountNumber.isBlank()
+				&& snap.bankName != null && !snap.bankName.isBlank();
 
 		// DELETE_COURSE: course will be removed in the same transaction, so keep
 		// only the title snapshot and avoid referencing a removed entity.
@@ -341,12 +342,10 @@ public class RefundServiceImpl implements RefundService {
 			// WAITING_BANK_INFO
 			notificationService.notifyUser(
 					student,
-					"Bạn có khoản hoàn tiền đang chờ",
+					"Chưa nhập thông tin ngân hàng",
 					String.format(
-							"Bạn có khoản hoàn tiền %s₫ cho khóa học \"%s\" đang chờ xử lý. " +
-									"Vui lòng vào Profile → Thông tin ngân hàng để cập nhật " +
-									"và nhận tiền hoàn sớm nhất.",
-							amountStr, courseTitle
+							"Chưa nhập thông tin ngân hàng, vui lòng nhập để được hoàn tiền cho khóa học \"%s\"",
+							courseTitle
 					)
 			);
 		}

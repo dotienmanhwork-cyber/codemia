@@ -39,4 +39,25 @@ public interface RefundRequestRepository extends JpaRepository<RefundRequest, St
 	@Modifying
 	@Query("UPDATE RefundRequest r SET r.course = null WHERE r.course.id = :courseId")
 	void nullifyCourseReference(@Param("courseId") String courseId);
+
+	@Query("""
+		SELECT COALESCE(SUM(r.amount), 0)
+		FROM RefundRequest r
+		WHERE r.status = vn.codemia.api.enums.RefundStatus.COMPLETED
+		  AND r.resolvedAt >= :from
+		  AND r.resolvedAt < :to
+	""")
+	double sumCompletedRefundsByPeriod(@Param("from") java.time.LocalDateTime from,
+	                                   @Param("to") java.time.LocalDateTime to);
+
+	@Query("""
+		SELECT FUNCTION('DATE_FORMAT', r.resolvedAt, '%Y-%m') AS month,
+		       COALESCE(SUM(r.amount), 0)                      AS refundedAmount
+		FROM RefundRequest r
+		WHERE r.status = vn.codemia.api.enums.RefundStatus.COMPLETED
+		  AND r.resolvedAt >= :from
+		GROUP BY FUNCTION('DATE_FORMAT', r.resolvedAt, '%Y-%m')
+		ORDER BY month ASC
+	""")
+	List<Object[]> findMonthlyRefundBreakdown(@Param("from") java.time.LocalDateTime from);
 }

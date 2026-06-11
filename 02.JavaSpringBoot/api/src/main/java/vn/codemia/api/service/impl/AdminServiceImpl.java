@@ -672,52 +672,91 @@ public class AdminServiceImpl implements AdminService {
 			refundCount = refundService.createRefundsForCourse(courseId);
 		}
 
-		// ── Bước 2: Cancel PENDING withdrawals → HOLD ────────────────────────
-		// FIX Bug A: phải cancel PENDING trước khi tính currentBalance.
-		// Nếu không, PENDING vẫn nằm trong "frozen" nhưng chưa trừ khỏi balance
-		// → currentBalance bị tính thừa → tạo thêm 1 HOLD trùng với PENDING đó.
+		// ── Bước 2: Thu hồi earnings — chỉ đúng phần cần thiết ─────────────────
+		//
+		// Quy tắc:
+		//  a) Số tiền cần thu hồi = min(totalEarnings, totalRefund)
+		//  b) Ưu tiên dùng số dư khả dụng (tạo 1 HOLD bằng phần khả dụng)
+		//  c) Nếu số dư khả dụng không đủ → thiếu bao nhiêu thì hủy PENDING
+		//     withdrawal từng cái cho đến khi đủ (giữ nguyên những cái còn lại)
+		//  d) Nếu sau khi hủy hết PENDING vẫn thiếu → platform bù phần còn lại
 		LocalDateTime now = LocalDateTime.now();
-		String cancelNote = "Lệnh rút tiền bị tạm giữ — course \""
-				+ course.getTitle() + "\" bị Admin xóa.";
 
-		List<Withdrawal> pendingWithdrawals = withdrawalRepository
-				.findByTeacherIdAndStatus(teacher.getId(), Withdrawal.WithdrawalStatus.PENDING);
-		pendingWithdrawals.forEach(w -> {
-			w.setStatus(Withdrawal.WithdrawalStatus.HOLD);
-			w.setNote(cancelNote);
-			w.setProcessedAt(now);
-			w.setProcessedBy(adminEmail);
-		});
-		withdrawalRepository.saveAll(pendingWithdrawals);
+		// Tổng earnings teacher nhận từ course này
+		double totalEarnings = orderDetailRepository.sumEarningsByCourseId(courseId);
+		// Tổng refund cần trả student = priceAtPurchase (earnings + platformFee)
+		double totalRefund   = orderDetailRepository.sumRevenueByCourseId(courseId);
 
-		// ── Bước 2b: Thu hồi teacherEarnings → HOLD withdrawal ───────────────
-		double holdAmount = 0;
+		double holdAmount   = 0;
 		double platformLoss = 0;
 
-		if (refundCount > 0) {
-			// Tổng earnings teacher nhận từ course này
-			double totalEarnings  = orderDetailRepository.sumEarningsByCourseId(courseId);
-			// Tổng refund cần trả student = priceAtPurchase (earnings + platformFee)
-			double totalRefund    = orderDetailRepository.sumRevenueByCourseId(courseId);
-			// Balance hiện tại của teacher — sau khi PENDING đã bị HOLD ở bước trên,
-			// sumFrozenByTeacherId bao gồm cả chúng → currentBalance phản ánh đúng tiền thực có.
-			double totalEarned    = orderDetailRepository.sumTotalEarningsByTeacherId(teacher.getId());
-			double totalApproved  = withdrawalRepository.sumApprovedByTeacherId(teacher.getId());
-			double totalFrozen    = withdrawalRepository.sumFrozenByTeacherId(teacher.getId());
-			double currentBalance = Math.max(totalEarned - totalApproved - totalFrozen, 0);
+		if (totalEarnings > 0) {
+			// Số tiền cần thu hồi từ teacher (không vượt quá earnings thực tế)
+			double clawbackNeeded = Math.min(totalEarnings, totalRefund);
 
-			if (currentBalance > 0) {
-				// Thu hồi phần nhỏ hơn: balance còn lại hoặc earnings của course này
-				holdAmount   = Math.min(currentBalance, totalEarnings);
-				platformLoss = Math.max(totalRefund - holdAmount, 0);
+			// ── Tính số dư khả dụng hiện tại của teacher ─────────────────────
+			// Tổng thu nhập teacher đã phát sinh (bao gồm cả course bị xóa,
+			// vì orderDetail chưa bị xóa tại thời điểm này)
+			double totalEarned = orderDetailRepository.sumTotalEarningsByTeacherId(teacher.getId());
 
+			// Tổng đã được approve (đã rút thành công)
+			double totalApproved = withdrawalRepository
+					.sumByTeacherIdAndStatus(teacher.getId(), Withdrawal.WithdrawalStatus.APPROVED);
+
+			// Tổng đang bị HOLD (bao gồm PENDING đã lock + HOLD trước đó)
+			double totalFrozen = withdrawalRepository
+					.sumByTeacherIdAndStatus(teacher.getId(), Withdrawal.WithdrawalStatus.HOLD)
+					+ withdrawalRepository.sumByTeacherIdAndStatus(teacher.getId(), Withdrawal.WithdrawalStatus.PENDING);
+
+			double availableBalance = Math.max(totalEarned - totalApproved - totalFrozen, 0);
+
+			// ── Phần có thể thu hồi từ số dư khả dụng ────────────────────────
+			double recoveredFromBalance = Math.min(availableBalance, clawbackNeeded);
+			double shortfall = clawbackNeeded - recoveredFromBalance;
+
+			// ── Nếu còn thiếu: hủy PENDING withdrawals cho đến khi đủ ────────
+			double recoveredFromPending = 0;
+			if (shortfall > 0) {
+				List<Withdrawal> pendingWithdrawals = withdrawalRepository
+						.findByTeacherIdAndStatus(teacher.getId(), Withdrawal.WithdrawalStatus.PENDING);
+
+				String cancelNote = "Lệnh rút tiền bị hủy để bù hoàn tiền — course \""
+						+ course.getTitle() + "\" bị Admin xóa.";
+
+				for (Withdrawal w : pendingWithdrawals) {
+					if (shortfall <= 0) break; // Đủ rồi, giữ nguyên các lệnh còn lại
+					w.setStatus(Withdrawal.WithdrawalStatus.CANCELLED);
+					w.setNote(cancelNote);
+					w.setProcessedAt(now);
+					w.setProcessedBy(adminEmail);
+					double wAmount = w.getAmount().doubleValue();
+					recoveredFromPending += wAmount;
+					shortfall -= wAmount;
+				}
+				withdrawalRepository.saveAll(pendingWithdrawals.stream()
+						.filter(w -> w.getStatus() == Withdrawal.WithdrawalStatus.CANCELLED)
+						.collect(java.util.stream.Collectors.toList()));
+			}
+
+			// Tổng thực sự thu hồi được từ teacher
+			holdAmount = recoveredFromBalance + recoveredFromPending;
+
+			// Platform phải bù phần còn thiếu (nếu có)
+			platformLoss = Math.max(totalRefund - holdAmount, 0);
+
+			// ── Tạo 1 HOLD ghi nhận tổng số đã thu hồi ───────────────────────
+			if (holdAmount > 0) {
 				String bankSnapshot = (teacher.getProfile() != null)
 						? teacher.getProfile().getBankAccountInfo() : null;
 
 				String holdNote = String.format(
 						"Thu hồi earnings — course \"%s\" bị xóa do vi phạm. " +
-								"Tổng refund student: %.0f\u20ab. Thu hồi từ teacher: %.0f\u20ab. Platform bù: %.0f\u20ab.",
-						course.getTitle(), totalRefund, holdAmount, platformLoss
+						"Tổng refund student: %.0f\u20ab. " +
+						"Thu từ số dư: %.0f\u20ab. Thu từ hủy lệnh rút: %.0f\u20ab. " +
+						"Platform bù: %.0f\u20ab.",
+						course.getTitle(), totalRefund,
+						recoveredFromBalance, recoveredFromPending,
+						platformLoss
 				);
 
 				withdrawalRepository.save(Withdrawal.builder()
@@ -727,10 +766,10 @@ public class AdminServiceImpl implements AdminService {
 						.note(holdNote)
 						.bankSnapshot(bankSnapshot)
 						.build());
-			} else {
-				// Teacher đã rút hết — platform chịu toàn bộ
-				platformLoss = totalRefund;
 			}
+		} else {
+			// Course miễn phí hoặc không có earnings phát sinh — platform chịu toàn bộ
+			platformLoss = totalRefund;
 		}
 
 		// ── Bước 3: Notify TRƯỚC khi xóa ─────────────────────────────────────
@@ -789,9 +828,22 @@ public class AdminServiceImpl implements AdminService {
 		LocalDateTime startOfThisMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
 		LocalDateTime startOfLastMonth = startOfThisMonth.minusMonths(1);
 
-		double monthlyRevenue    = orderDetailRepository.sumTotalRevenueByPeriod(startOfThisMonth, now);
-		double lastMonthRevenue  = orderDetailRepository.sumTotalRevenueByPeriod(startOfLastMonth, startOfThisMonth);
-		double totalPayouts      = orderDetailRepository.sumTotalPayoutsByPeriod(startOfThisMonth, now);
+		double rawMonthlyRevenue    = orderDetailRepository.sumTotalRevenueByPeriod(startOfThisMonth, now);
+		double rawLastMonthRevenue  = orderDetailRepository.sumTotalRevenueByPeriod(startOfLastMonth, startOfThisMonth);
+		double rawTotalPayouts      = orderDetailRepository.sumTotalPayoutsByPeriod(startOfThisMonth, now);
+
+		// Lấy tổng số tiền refund đã hoàn thành trong kỳ
+		double monthlyRefunds = refundRequestRepository.sumCompletedRefundsByPeriod(startOfThisMonth, now);
+		double lastMonthRefunds = refundRequestRepository.sumCompletedRefundsByPeriod(startOfLastMonth, startOfThisMonth);
+
+		// Doanh thu thực = Doanh thu gốc - Tiền hoàn trả học viên (100% giá mua)
+		double monthlyRevenue = Math.max(rawMonthlyRevenue - monthlyRefunds, 0);
+		double lastMonthRevenue = Math.max(rawLastMonthRevenue - lastMonthRefunds, 0);
+
+		// Chi trả thực = Chi trả gốc - Thu hồi earnings giáo viên (80% của tiền hoàn trả)
+		double totalPayouts = Math.max(rawTotalPayouts - (monthlyRefunds * 0.8), 0);
+
+		// Lợi nhuận ròng = Doanh thu thực - Chi trả thực (tự động trừ 20% phí nền tảng đã refund)
 		double platformNet       = monthlyRevenue - totalPayouts;
 		long   totalTransactions = orderDetailRepository.countTransactionsByPeriod(startOfThisMonth, now);
 
@@ -815,18 +867,33 @@ public class AdminServiceImpl implements AdminService {
 				.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
 		List<Object[]> rows = orderDetailRepository.findMonthlyBreakdown(from);
+		List<Object[]> refundRows = refundRequestRepository.findMonthlyRefundBreakdown(from);
+
+		java.util.Map<String, Double> refundMap = refundRows.stream()
+				.collect(Collectors.toMap(
+						row -> (String) row[0],
+						row -> ((Number) row[1]).doubleValue(),
+						(a, b) -> a + b
+				));
 
 		return rows.stream().map(row -> {
 			String month      = (String) row[0];
 			double revenue    = ((Number) row[1]).doubleValue();
 			double payouts    = ((Number) row[2]).doubleValue();
-			double net        = revenue - payouts;
 			long transactions = ((Number) row[3]).longValue();
+
+			double refunded = refundMap.getOrDefault(month, 0.0);
+			// Doanh thu trừ tiền hoàn (100% priceAtPurchase)
+			double adjustedRevenue = Math.max(revenue - refunded, 0);
+			// Payouts của teacher trừ phần earnings bị thu hồi (80% refunded)
+			double adjustedPayouts = Math.max(payouts - (refunded * 0.8), 0);
+			// Net thực tế (revenue - payouts) tự động phản ánh việc trừ 20% phí nền tảng
+			double net = adjustedRevenue - adjustedPayouts;
 
 			return AdminMonthlyBreakdownResponse.builder()
 					.month(month)
-					.revenue(revenue)
-					.payouts(payouts)
+					.revenue(adjustedRevenue)
+					.payouts(adjustedPayouts)
 					.net(net)
 					.transactions(transactions)
 					.build();

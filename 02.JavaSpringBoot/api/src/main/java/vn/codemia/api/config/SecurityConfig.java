@@ -44,6 +44,12 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.PUT, "/api/tags/**").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasRole("ADMIN")
 
+						// ===== CẤU HÌNH CHO REVIEWS (ĐÁNH GIÁ) =====
+						.requestMatchers(HttpMethod.GET, "/api/courses/*/reviews/my").authenticated()
+						.requestMatchers(HttpMethod.POST, "/api/courses/*/reviews").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/api/courses/*/reviews/**").authenticated()
+						.requestMatchers(HttpMethod.DELETE, "/api/courses/*/reviews/**").authenticated()
+
 						// ===== CẤU HÌNH CHO COURSES =====
 						// Ai cũng có thể xem danh sách và chi tiết khóa học (để còn mua chứ!)
 						.requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/**").permitAll()
